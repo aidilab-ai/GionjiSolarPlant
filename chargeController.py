@@ -4,19 +4,21 @@ BAUDRATE = 115200
 PORT = '/dev/ttyUSB0'
 
 def readAll():
+
     data = dict()
     
     try:
+
         print("Connect modbus...")
         client = ModbusClient(method='rtu', port=PORT, baudrate=BAUDRATE)
         client.connect()
-    # print( client)
+        # print(client)
         result = client.read_input_registers(0x3100, 15, unit=1)
-    #result1 = client.read_input_registers(0x3300, 14, unit=1)
-    #result2 = client.read_input_registers(0x3110, 2, unit=1)
-    # result3 = client.read_input_registers(0x311,15,unit=1)
-    # result4 = client.read_input_registers(0x3200,15,unit=1)
-    # print (result)
+        # result1 = client.read_input_registers(0x3300, 14, unit=1)
+        # result2 = client.read_input_registers(0x3110, 2, unit=1)
+        # result3 = client.read_input_registers(0x311,15,unit=1)
+        # result4 = client.read_input_registers(0x3200,15,unit=1)
+        # print(result)
 
         #data['date'] = datetime.datetime.now()    
         data['panelVoltage'] = float(result.registers[0] / 100.0)
@@ -27,10 +29,12 @@ def readAll():
         data['loadCurrent'] = float(result.registers[13] / 100.0)
         data['inPower'] =  data['panelVoltage'] * data['panelCurrent']
         data['outPower'] =  data['loadVoltage'] * data['loadCurrent']
-    #data['batteryTemperature'] = float(result2.registers[0] / 100)
-    # batteryCapacity = float(result3.registers[10] /100)
-    # batteryStatus = (result4.registers[0])
+        # data['batteryTemperature'] = float(result2.registers[0] / 100)
+        # batteryCapacity = float(result3.registers[10] /100)
+        # batteryStatus = (result4.registers[0])
+
     except Exception as e:
+
         data['panelVoltage'] = None
         data['panelCurrent'] = None
         data['batteryVoltage'] = None
@@ -40,11 +44,12 @@ def readAll():
         data['inPower'] =  None
         data['outPower'] = None
         print(e)
+
     return data
 
 
-
 def getPanelVoltage():
+
     client = ModbusClient(method='rtu', port=PORT, baudrate=BAUDRATE)
     client.connect()
     result = client.read_input_registers(0x3100, 15, unit=1)
@@ -52,7 +57,9 @@ def getPanelVoltage():
     client.close()
     return data
 
+
 def getPanelCurrent():
+
     client = ModbusClient(method='rtu', port=PORT, baudrate=BAUDRATE)
     client.connect()
     result = client.read_input_registers(0x3100, 15, unit=1)
@@ -60,7 +67,9 @@ def getPanelCurrent():
     client.close()
     return data
 
+
 def getBatteryVoltage():
+
     client = ModbusClient(method='rtu', port=PORT, baudrate=BAUDRATE)
     client.connect()
     result = client.read_input_registers(0x3100, 15, unit=1)
@@ -68,7 +77,9 @@ def getBatteryVoltage():
     client.close()
     return data
 
+
 def getBatteryCurrent():
+
     client = ModbusClient(method='rtu', port=PORT, baudrate=BAUDRATE)
     client.connect()
     result = client.read_input_registers(0x3100, 15, unit=1)
@@ -76,7 +87,9 @@ def getBatteryCurrent():
     client.close()
     return data
 
+
 def getLoadVoltage():
+
     client = ModbusClient(method='rtu', port=PORT, baudrate=BAUDRATE)
     client.connect()
     result = client.read_input_registers(0x3100, 15, unit=1)
@@ -84,7 +97,9 @@ def getLoadVoltage():
     client.close()
     return data
 
+
 def getLoadCurrent():
+
     client = ModbusClient(method='rtu', port=PORT, baudrate=BAUDRATE)
     client.connect()
     result = client.read_input_registers(0x3100, 15, unit=1)

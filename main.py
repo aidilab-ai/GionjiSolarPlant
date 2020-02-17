@@ -1,40 +1,44 @@
 
 from losantmqtt import Device
-import os
-import json
 import datetime
+import json
 import time
+import os
 
+import chargeController
 import currentMonitor
 import relayBox
 import database
 import sensors
-import chargeController
 
 
 data = dict()
 
-ACCESS_KEY    = 'eed2fd5b-8219-4b18-a858-cdf345185cd6'
+ACCESS_KEY = 'eed2fd5b-8219-4b18-a858-cdf345185cd6'
 ACCESS_SECRET = '1d8c634d39551e13a6da838bfdc152cdc43e10362bca3a888cbfc2a411020dd3'
-DEVICE_ID     = '5e2ec7308eb4af0006ecd530'
+DEVICE_ID = '5e2ec7308eb4af0006ecd530'
 
 DELAY = 1.0
-
 
 # Construct Losant device
 device = Device(DEVICE_ID, ACCESS_KEY, ACCESS_SECRET)
 
+device.add_event_observer("command", on_command)
+
 def sendDataToLosant(data):
+
     print("Sending to Losant...")
     device.send_state(data)
 
+
 def connectToLosant():
+
     # Connect to Losant and leave the connection open
     global device
     device.connect(blocking=False)
 
 
-def packToDb(data):
+def to_tuple(data):
     ret = (
         data['panelVoltage'],
         data['panelCurrent'],
@@ -48,81 +52,124 @@ def packToDb(data):
         data['plug_2_current'],  
         data['inverter_current'],
         data['irradiation']
-            )
+    )
     return ret
 
 
-
-
 def init():
+
     database.init()
 
 
+def on_command(device, command):
 
+    print(command["name"] + " command received")
+
+    print(command["state"])
+
+    # if command["name"] == relayBox.PLUG_A_ID:
+
+    #     if command["state"] == "ON":
+    #         relayBox.enablePlugA()
+    #     else:
+    #         relayBox.disablePlugA()
+    
+
+    # elif command["name"] == relayBox.PLUG_B_ID:
+
+    #     if command["state"] == "ON":
+    #         relayBox.enablePlugB()
+    #     else:
+    #         relayBox.disablePlugB()
+    
+
+    # elif command["name"] == relayBox.INVERTER_ID:
+
+    #     if command["state"] == "ON":
+    #         relayBox.enableInverter()
+    #     else:
+    #         relayBox.disableInverter()
+    
+
+    # elif command["name"] == relayBox.EXTERNAL_SOURCE_ID:
+
+    #     if command["state"] == "ON":
+    #         relayBox.enableExternalPower()
+    #     else:
+    #         relayBox.disableExternalPower()
 
 
 def main():
+
     print('Gionji Solar Plant')
+
+    device.add_event_observer("command", on_command)
+    
     connectToLosant()
 
     currentMonitor.calculateCurrentBias( currentMonitor.PLUG_1 )
     currentMonitor.calculateCurrentBias( currentMonitor.PLUG_2 )
     currentMonitor.calculateCurrentBias( currentMonitor.INVERTER )
     
+    # Initialize the database. This amounts to creating a table if it doesn't exist
     database.init()
 
     while(True):
+
         global data
         data = dict()
 
+        # Read all the data provided by the Charge Controller
         data = chargeController.readAll()
 
+        # Read irradiation data
         try:
-            data['irradiation']      = sensors.getIrradiation()
-        except Exception as e:
-            data['irradiation']      = None 
-            print( e )
 
+            data['irradiation'] = sensors.getIrradiation()
+
+        except Exception as e:
+
+            data['irradiation'] = None 
+            print(e)
+
+        # Read current-related data
         try:
-            data['plug_1_current']   = currentMonitor.getCurrentPlug1()
-            data['plug_2_current']   = currentMonitor.getCurrentPlug2()
+        
+            data['plug_1_current'] = currentMonitor.getCurrentPlug1()
+            data['plug_2_current'] = currentMonitor.getCurrentPlug2()
             data['inverter_current'] = currentMonitor.getCurrentInverter()    
+        
         except Exception as e:
-            data['plug_1_current']   = None
-            data['plug_2_current']   = None
+
+            data['plug_1_current'] = None
+            data['plug_2_current'] = None
             data['inverter_current'] = None
-            print( e )
+            print(e)
 
 
-        ## send data to losant
+        # Send data to Losant
         try:
             sendDataToLosant(data)
+
         except Exception as e:
-            print( e )
+            print(e)
 
-        ## Pack data to db
-        #  To use the data in the sqlite query has to be
-        #  parsed to tuples
-        data = packToDb( data )
+        # Pack data to db. In order to be able to insert it into the table, data must be formatted as a tuple
+        data = to_tuple(data)
 
-        ## Print data
-        # print( data )
+        # Print data
+        # print(data)
 
-        ## Add data to db
-        database.add_data( data )
+        # Insert data into db
+        database.insert_data(data)
         
         ## select all data
         #database.select_data_all()
 
-        time.sleep( DELAY )
-
-
+        time.sleep(DELAY)
 
 
 if __name__ == "__main__":
     # application.listen(8888)
     # tornado.ioloop.IOLoop.instance().start()
     main()
-
-
-

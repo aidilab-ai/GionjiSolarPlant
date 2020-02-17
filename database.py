@@ -1,9 +1,9 @@
-import sqlite3
 from sqlite3 import Error
 import datetime 
+import sqlite3
+
 
 DATABASE_PATH = r"./sqlite.db"
-
 
 
 def create_connection(db_file):
@@ -21,7 +21,6 @@ def create_connection(db_file):
  
     return conn
 
-
  
 def create_table(conn):
     """ create a table from the create_table_sql statement
@@ -30,34 +29,34 @@ def create_table(conn):
     :return:
     """
 
-    sql_create_table = """ CREATE TABLE IF NOT EXISTS gionjistar1 (
-                                        id integer     PRIMARY KEY AUTOINCREMENT,
-                                        panel_voltage         real,
-                                        panel_current         real,
-                                        battery_voltage       real,
-                                        battery_current       real,
+    sql_create_table = """ 
+    CREATE TABLE IF NOT EXISTS gionjistar1 (
+        id integer     PRIMARY KEY AUTOINCREMENT,
+        panel_voltage         real,
+        panel_current         real,
+        battery_voltage       real,
+        battery_current       real,
+                                    
+        load_voltage          real,
+        load_current          real,
+        power_input           real,
+        power_output          real,
+        output_current_plug_1 real,
                                        
-                                        load_voltage          real,
-                                        load_current          real,
-                                        power_input           real,
-                                        power_output          real,
-                                        output_current_plug_1 real,
-                                       
-                                        output_current_plug_2 real,
-                                        inverter_current      real,
-                                        irradiation           real,
-                                        time                  timestamp NOT NULL
-                                    ); """
+        output_current_plug_2 real,
+        inverter_current      real,
+        irradiation           real,
+        time                  timestamp NOT NULL
+    ); 
+    """
 
     try:
         c = conn.cursor()
-        c.execute( sql_create_table )
-    except Error as e:
+        c.execute( sql_create_table ) as e:
         print(e)
 
 
- 
-def create_data(conn, data ):
+def perform_insert(conn, data):
     """
     Create a new task
     :param conn:
@@ -65,31 +64,40 @@ def create_data(conn, data ):
     :return:
     """
 
-    data = data + (datetime.datetime.now(), )
+    data = data + (datetime.datetime.now(),)
 
-    sql = ''' INSERT INTO gionjistar1( panel_voltage,
-                                       panel_current,
-                                       battery_voltage,
-                                       battery_current,
-                                       load_voltage,
+    sql = """ 
+    INSERT INTO gionjistar1(
+        panel_voltage,
+        panel_current,
+        battery_voltage,
+        battery_current,
+        load_voltage,
 
-                                       load_current,
-                                       power_input,
-                                       power_output,
-                                       output_current_plug_1,
-                                       output_current_plug_2,
+        load_current,
+        power_input,
+        power_output,
+        output_current_plug_1,
+        output_current_plug_2,
 
-                                       inverter_current,
-                                       irradiation,
-                                       time
-                                    )
-              VALUES( ?,?,?,?,?, ?,?,?,?,?, ?,?,? ) '''
+        inverter_current,
+        irradiation,
+        time
+    )
+    VALUES( ?,?,?,?,?, ?,?,?,?,?, ?,?,? ) 
+    """
 
-    cur = conn.cursor()
-    cur.execute(sql, data)
+    try:
 
-    conn.commit()
-    conn.close()
+        cur = conn.cursor()
+        cur.execute(sql, data)
+
+        conn.commit()
+        conn.close()
+    
+    except Exception as e:
+
+        print(e)
 
 
 
@@ -114,10 +122,10 @@ def getLastData():
     result = select_data_last()
 
     if result != None:
-        data['panel_voltage'] = result[ 1 ]
-        data['panel_current'] = result[ 2 ]
-        data['battery_voltage'] = result[ 3 ]
-        data['battery_current'] = result[ 4]
+        data['panel_voltage'] = result[1]
+        data['panel_current'] = result[2]
+        data['battery_voltage'] = result[3]
+        data['battery_current'] = result[4]
         data['load_voltage'] = result[5]
         data['load_current'] = result[6]
         data['power_input'] = result[7]
@@ -172,6 +180,7 @@ def select_data_all():
 
 
 def init():
+
     conn = create_connection( DATABASE_PATH )
 
     # create tables
@@ -185,42 +194,43 @@ def init():
 
 
 
-def add_data( data ):
-    conn = create_connection( DATABASE_PATH )
+def insert_data(data):
 
-    # create tables
+    conn = create_connection(DATABASE_PATH)
+
     if conn is not None:
-        # create projects table
-        create_data( conn, data )
+        perform_insert(conn, data)
     else:
         print("Error! cannot create db connection")
 
     conn.close()
 
 
- 
 def main():
+
     DATABASE_PATH = r"./sqlite.db"
  
-    sql_create_gionji_table = """ CREATE TABLE IF NOT EXISTS gionjistar1 (
-                                        id integer PRIMARY KEY,
-                                        panel_voltage         real,
-                                        panel_current         real,
-                                        battery_voltage       real,
-                                        battery_current       real,
-                                        load_voltage          real,
-                                        load_current          real,
-                                        power_input           real,
-                                        power_output          real,
-                                        output_current_plug_1 real,
-                                        output_current_plug_2 real,
-                                        inverter_current      real,
-                                        irradiation           real,
-                                        time                  timestamp NOT NULL
-                                    ); """
+    sql_create_gionji_table = """ 
+    CREATE TABLE IF NOT EXISTS gionjistar1 (
+        id integer PRIMARY KEY,
+        panel_voltage         real,
+        panel_current         real,
+        battery_voltage       real,
+        battery_current       real,
+        load_voltage          real,
+        load_current          real,
+        power_input           real,
+        power_output          real,
+        output_current_plug_1 real,
+        output_current_plug_2 real,
+        inverter_current      real,
+        irradiation           real,
+        time                  timestamp NOT NULL
+    ); 
+    """
  
     # create a database connection
-    conn = create_connection( DATABASE_PATH )
+    conn = create_connection(DATABASE_PATH)
 
     # create tables
     if conn is not None:
@@ -229,7 +239,6 @@ def main():
     else:
         print("Error! cannot create the database connection.")
 
-    data = (1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, datetime.datetime.now() )
+    data = (1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, datetime.datetime.now())
 
-    create_task(conn, data )
-
+    create_task(conn, data)
