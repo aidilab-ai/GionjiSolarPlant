@@ -51,8 +51,12 @@ def create_table(conn):
     """
 
     try:
+    
         c = conn.cursor()
-        c.execute( sql_create_table ) as e:
+        c.execute(sql_create_table)
+    
+    except Exception as e:
+    
         print(e)
 
 

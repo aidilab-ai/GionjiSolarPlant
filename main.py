@@ -1,4 +1,3 @@
-
 from losantmqtt import Device
 import datetime
 import json
@@ -20,10 +19,6 @@ DEVICE_ID = '5e2ec7308eb4af0006ecd530'
 
 DELAY = 1.0
 
-# Construct Losant device
-device = Device(DEVICE_ID, ACCESS_KEY, ACCESS_SECRET)
-
-device.add_event_observer("command", on_command)
 
 def sendDataToLosant(data):
 
@@ -64,7 +59,6 @@ def init():
 def on_command(device, command):
 
     print(command["name"] + " command received")
-
     print(command["state"])
 
     # if command["name"] == relayBox.PLUG_A_ID:
@@ -99,22 +93,25 @@ def on_command(device, command):
     #         relayBox.disableExternalPower()
 
 
+# Construct Losant device
+device = Device(DEVICE_ID, ACCESS_KEY, ACCESS_SECRET)
+device.add_event_observer("command", on_command)
+
+
 def main():
 
     print('Gionji Solar Plant')
-
-    device.add_event_observer("command", on_command)
     
     connectToLosant()
 
-    currentMonitor.calculateCurrentBias( currentMonitor.PLUG_1 )
-    currentMonitor.calculateCurrentBias( currentMonitor.PLUG_2 )
-    currentMonitor.calculateCurrentBias( currentMonitor.INVERTER )
+    currentMonitor.calculateCurrentBias(currentMonitor.PLUG_1)
+    currentMonitor.calculateCurrentBias(currentMonitor.PLUG_2)
+    currentMonitor.calculateCurrentBias(currentMonitor.INVERTER)
     
     # Initialize the database. This amounts to creating a table if it doesn't exist
     database.init()
 
-    while(True):
+    while True:
 
         global data
         data = dict()
@@ -122,9 +119,9 @@ def main():
         # Read all the data provided by the Charge Controller
         data = chargeController.readAll()
 
-        # Read irradiation data
         try:
 
+            # Read irradiation data
             data['irradiation'] = sensors.getIrradiation()
 
         except Exception as e:
@@ -132,9 +129,9 @@ def main():
             data['irradiation'] = None 
             print(e)
 
-        # Read current-related data
         try:
-        
+
+            # Read current-related data
             data['plug_1_current'] = currentMonitor.getCurrentPlug1()
             data['plug_2_current'] = currentMonitor.getCurrentPlug2()
             data['inverter_current'] = currentMonitor.getCurrentInverter()    
@@ -146,9 +143,8 @@ def main():
             data['inverter_current'] = None
             print(e)
 
-
-        # Send data to Losant
         try:
+            # Send data to Losant
             sendDataToLosant(data)
 
         except Exception as e:
@@ -170,6 +166,4 @@ def main():
 
 
 if __name__ == "__main__":
-    # application.listen(8888)
-    # tornado.ioloop.IOLoop.instance().start()
     main()

@@ -14,6 +14,30 @@ class LastData(tornado.web.RequestHandler):
 
 class Plugs(tornado.web.RequestHandler):
 
+    def __init__(self, application, request, **kwargs):
+
+        super(Plugs, self).__init__(application, request, **kwargs)
+        
+        self.handlers = {
+            rb.PLUG_A_ID: {
+                rb.STATE_ON: (rb.enablePlugA, 'Turn on plug A'),
+                rb.STATE_OFF: (rb.disablePlugA, 'Turn off plug A')
+            },
+            rb.PLUG_B_ID: {
+                rb.STATE_ON: (rb.enablePlugB, 'Turn on plug B'),
+                rb.STATE_OFF: (rb.disablePlugB, 'Turn off plug B')
+            },
+            rb.INVERTER_ID: {
+                rb.STATE_ON: (rb.enableInverter, 'Turn on inverter'),
+                rb.STATE_OFF: (rb.disableInverter, 'Turn off inverter')
+            },
+            rb.EXTERNAL_SOURCE_ID: {
+                rb.STATE_ON: (rb.enableExternalPower, 'Turn on external power'),
+                rb.STATE_OFF: (rb.disableExternalPower, 'Turn on solar panel')
+            }                                    
+        }
+
+
     def get(self):
 
         self.write("plug_id: a b i e --- state: 0 1")
@@ -25,58 +49,11 @@ class Plugs(tornado.web.RequestHandler):
         state = self.get_argument('state')
 
         self.write( "plug_id: " + str(plug_id) + "/nstate: " + str(state) )
-
-
-        if plug_id == rb.PLUG_A_ID:
-
-            if state == rb.STATE_ON:
-
-                rb.enablePlugA()
-                print( "Turn on plug A" )
-
-            elif state == rb.STATE_OFF:
-
-                rb.disablePlugA()
-                print( "Turn off plug A" )
+        (handler_function, message) = self.handlers[plug_id][state]
         
-        elif plug_id == rb.PLUG_B_ID:
+        handler_function()
+        print(message)
 
-            if state == rb.STATE_ON:
-
-                rb.enablePlugB()
-                print( "Turn on plug B" )
-
-            elif state == rb.STATE_OFF:
-
-                rb.disablePlugB()
-                print( "Turn off plug B" )
-
-        elif plug_id == rb.INVERTER_ID:
-
-            if state == rb.STATE_ON:
-
-                rb.enableInverter()
-                print( "Turn on INVERTER" )
-
-            elif state == rb.STATE_OFF:
-
-                rb.disableInverter()
-                print( "Turn off plug inverter" )
-
-
-        elif plug_id == rb.EXTERNAL_SOURCE_ID:
-
-            if state == rb.STATE_ON:
-
-                rb.enableExternalPower()
-                print( "Turn on external power supply" )
-
-            elif state == rb.STATE_OFF:
-
-                rb.disableExternalPower()
-                print( "Turn on solar panel" )
-
-        
 
 class User(tornado.web.RequestHandler):
 
